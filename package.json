@@ -7,8 +7,8 @@
     "apps/*"
   ],
   "scripts": {
-    "dev:api": "npm -w @camarin/api run dev",
-    "dev:worker": "npm -w @camarin/worker run dev",
+    "dev:api": "tsx watch apps/api/src/index.ts",
+    "dev:worker": "tsx watch apps/worker/src/index.ts",
     "dev:web": "npm -w @camarin/web run dev",
     "db:generate": "npm -w @camarin/db run generate",
     "db:migrate": "npm -w @camarin/db run migrate",

@@ -1,8 +1,32 @@
+import { type ReactNode } from 'react'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { useAuth } from './auth'
+import Jobs from './pages/Jobs'
+import Login from './pages/Login'
+import Signup from './pages/Signup'
+
+function Protected({ children }: { children: ReactNode }) {
+  const { user, loading } = useAuth()
+  if (loading) return <div className="center">loading…</div>
+  if (!user) return <Navigate to="/login" replace />
+  return <>{children}</>
+}
+
 export default function App() {
+  const { user } = useAuth()
   return (
-    <div style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '40px auto' }}>
-      <h1>Media pipeline</h1>
-      <p>frontend goes here — auth, upload, job list.</p>
-    </div>
+    <Routes>
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/signup" element={user ? <Navigate to="/" replace /> : <Signup />} />
+      <Route
+        path="/"
+        element={
+          <Protected>
+            <Jobs />
+          </Protected>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
