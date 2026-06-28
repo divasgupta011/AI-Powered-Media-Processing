@@ -1,6 +1,7 @@
 import { type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth'
+import JobDetail from './pages/JobDetail'
 import Jobs from './pages/Jobs'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -23,6 +24,14 @@ export default function App() {
         element={
           <Protected>
             <Jobs />
+          </Protected>
+        }
+      />
+      <Route
+        path="/jobs/:id"
+        element={
+          <Protected>
+            <JobDetail />
           </Protected>
         }
       />

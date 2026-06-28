@@ -44,7 +44,11 @@ export async function api(path: string, options: RequestInit = {}): Promise<Resp
   const headers = new Headers(options.headers)
   const tokens = getTokens()
   if (tokens) headers.set('authorization', `Bearer ${tokens.accessToken}`)
-  if (options.body && !headers.has('content-type')) headers.set('content-type', 'application/json')
+  // let the browser set the multipart boundary for file uploads
+  const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData
+  if (options.body && !isForm && !headers.has('content-type')) {
+    headers.set('content-type', 'application/json')
+  }
 
   let res = await fetch(`${BASE}${path}`, { ...options, headers })
 
