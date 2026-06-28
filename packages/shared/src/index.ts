@@ -33,3 +33,6 @@ export type PipelineResult = {
   flagged: boolean
   flaggedCategory: string | null
 }
+
+export const MEDIA_QUEUE = 'media-processing'
+export type MediaJobData = { jobId: string }

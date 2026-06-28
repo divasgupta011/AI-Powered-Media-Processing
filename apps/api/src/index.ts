@@ -4,6 +4,7 @@ import express from 'express'
 import { env } from './env'
 import { errorHandler } from './errors'
 import { authRouter } from './routes/auth'
+import { jobsRouter } from './routes/jobs'
 
 const app = express()
 
@@ -15,6 +16,7 @@ app.get('/health', (_req, res) => {
 })
 
 app.use('/auth', authRouter)
+app.use('/jobs', jobsRouter)
 
 app.use(errorHandler)
 
