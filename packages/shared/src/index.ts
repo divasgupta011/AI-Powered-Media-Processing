@@ -13,12 +13,7 @@ export const SAFE_SEARCH_CATEGORIES = ['adult', 'spoof', 'medical', 'violence', 
 export type SafeSearchCategory = (typeof SAFE_SEARCH_CATEGORIES)[number]
 
 export type Likelihood =
-  | 'UNKNOWN'
-  | 'VERY_UNLIKELY'
-  | 'UNLIKELY'
-  | 'POSSIBLE'
-  | 'LIKELY'
-  | 'VERY_LIKELY'
+  'UNKNOWN' | 'VERY_UNLIKELY' | 'UNLIKELY' | 'POSSIBLE' | 'LIKELY' | 'VERY_LIKELY'
 
 // LIKELY or VERY_LIKELY counts as flagged
 export const FLAGGING_LIKELIHOODS: Likelihood[] = ['LIKELY', 'VERY_LIKELY']

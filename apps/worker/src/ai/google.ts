@@ -13,7 +13,8 @@ function getClient() {
 // gRPC INVALID_ARGUMENT (3) / PERMISSION_DENIED (7) won't get better on retry
 function rethrow(err: unknown): never {
   const code = (err as { code?: number }).code
-  if (code === 3 || code === 7) throw new PermanentError(`vision rejected the request (code ${code})`)
+  if (code === 3 || code === 7)
+    throw new PermanentError(`vision rejected the request (code ${code})`)
   throw err
 }
 

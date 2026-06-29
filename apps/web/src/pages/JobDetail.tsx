@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import AuthedImage from '../components/AuthedImage'
 import { getJob, retryJob, type JobDetail as Job } from '../jobsApi'
+
+const RISKY = ['LIKELY', 'VERY_LIKELY']
+function riskClass(v: string) {
+  if (RISKY.includes(v)) return 'risk-high'
+  if (v === 'POSSIBLE') return 'risk-mid'
+  return 'risk-low'
+}
 
 export default function JobDetail() {
   const { id } = useParams<{ id: string }>()
@@ -49,6 +57,8 @@ export default function JobDetail() {
           {job.flagged && <span className="badge flag">flagged: {job.flaggedCategory}</span>}
         </p>
 
+        <AuthedImage jobId={job.id} className="detail-img" />
+
         {(job.status === 'pending' || job.status === 'processing') && (
           <p className="muted">Processing — this updates on its own.</p>
         )}
@@ -76,10 +86,11 @@ export default function JobDetail() {
             <section>
               <h3>Labels</h3>
               {job.result.labels?.length ? (
-                <ul className="labels">
+                <ul className="chips">
                   {job.result.labels.map((l) => (
                     <li key={l.description}>
-                      {l.description} <span className="muted">{Math.round(l.score * 100)}%</span>
+                      {l.description}
+                      <span className="score">{Math.round(l.score * 100)}%</span>
                     </li>
                   ))}
                 </ul>
@@ -93,7 +104,7 @@ export default function JobDetail() {
                 <ul className="safety">
                   {Object.entries(job.result.safety).map(([k, v]) => (
                     <li key={k}>
-                      <span>{k}</span> <span className="muted">{v}</span>
+                      <span>{k}</span> <span className={riskClass(v)}>{v}</span>
                     </li>
                   ))}
                 </ul>

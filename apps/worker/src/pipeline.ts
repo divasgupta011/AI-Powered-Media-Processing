@@ -2,7 +2,10 @@ import type { Label, PipelineResult, SafetyResult } from '@camarin/shared'
 import { FLAGGING_LIKELIHOODS, SAFE_SEARCH_CATEGORIES } from '@camarin/shared'
 import type { AiClient } from './ai/types'
 
-export function computeFlagged(safety: SafetyResult): { flagged: boolean; category: string | null } {
+export function computeFlagged(safety: SafetyResult): {
+  flagged: boolean
+  category: string | null
+} {
   for (const category of SAFE_SEARCH_CATEGORIES) {
     if (FLAGGING_LIKELIHOODS.includes(safety[category])) {
       return { flagged: true, category }

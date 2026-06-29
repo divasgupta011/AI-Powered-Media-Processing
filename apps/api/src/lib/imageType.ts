@@ -18,7 +18,11 @@ export function sniffImageType(buf: Buffer): AllowedMime | null {
   ) {
     return 'image/png'
   }
-  if (buf.length >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') {
+  if (
+    buf.length >= 12 &&
+    buf.toString('ascii', 0, 4) === 'RIFF' &&
+    buf.toString('ascii', 8, 12) === 'WEBP'
+  ) {
     return 'image/webp'
   }
   return null

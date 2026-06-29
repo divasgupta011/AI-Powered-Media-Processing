@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
+import AuthedImage from '../components/AuthedImage'
+import NotificationBell from '../components/NotificationBell'
 import { listJobs, uploadJob, type JobSummary } from '../jobsApi'
 
 const MAX_MB = 5
@@ -53,7 +55,8 @@ export default function Jobs() {
     <div className="app">
       <header className="topbar">
         <strong>Media pipeline</strong>
-        <div>
+        <div className="topbar-right">
+          <NotificationBell />
           <span className="muted">{user?.email}</span>
           <button className="link" onClick={() => logout()}>
             log out
@@ -85,6 +88,7 @@ export default function Jobs() {
             {jobs.map((job) => (
               <li key={job.id} className={job.flagged ? 'flagged' : ''}>
                 <Link to={`/jobs/${job.id}`}>
+                  <AuthedImage jobId={job.id} className="thumb" />
                   <span className="fname">{job.originalFilename}</span>
                   <span className={`badge ${job.status}`}>{job.status}</span>
                   {job.flagged && (

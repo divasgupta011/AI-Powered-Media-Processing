@@ -7,7 +7,7 @@ import { ApiError, asyncHandler } from '../errors'
 import { sniffImageType } from '../lib/imageType'
 import { requireAuth } from '../middleware/auth'
 import { mediaQueue } from '../queue'
-import { putObject } from '../storage'
+import { getObject, putObject } from '../storage'
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -78,6 +78,20 @@ jobsRouter.get(
     })
     if (!job) throw new ApiError(404, 'job not found')
     res.json({ job })
+  }),
+)
+
+jobsRouter.get(
+  '/:id/image',
+  asyncHandler(async (req, res) => {
+    const job = await prisma.job.findFirst({
+      where: { id: req.params.id, userId: req.userId as string },
+      select: { storageKey: true, mimeType: true },
+    })
+    if (!job) throw new ApiError(404, 'job not found')
+    res.setHeader('content-type', job.mimeType)
+    res.setHeader('cache-control', 'private, max-age=300')
+    res.send(await getObject(job.storageKey))
   }),
 )
 

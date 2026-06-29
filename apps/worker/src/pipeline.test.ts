@@ -51,7 +51,9 @@ describe('computeFlagged', () => {
   })
 
   it('returns the first flagged category in SafeSearch order', () => {
-    expect(computeFlagged({ ...safe, medical: 'LIKELY', racy: 'VERY_LIKELY' }).category).toBe('medical')
+    expect(computeFlagged({ ...safe, medical: 'LIKELY', racy: 'VERY_LIKELY' }).category).toBe(
+      'medical',
+    )
   })
 })
 
