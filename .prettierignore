@@ -1,0 +1,7 @@
+node_modules
+dist
+build
+coverage
+.cache
+package-lock.json
+tmp

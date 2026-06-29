@@ -15,7 +15,9 @@
     "infra:up": "docker compose up -d db redis minio minio-setup",
     "infra:down": "docker compose down",
     "test": "npm -w @camarin/worker run test",
-    "format": "prettier --write ."
+    "typecheck": "npm -w @camarin/api run typecheck && npm -w @camarin/worker run typecheck",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "devDependencies": {
     "prettier": "^3.3.3",
