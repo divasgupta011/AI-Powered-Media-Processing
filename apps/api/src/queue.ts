@@ -10,6 +10,8 @@ export const connection: ConnectionOptions = {
   username: url.username || undefined,
   password: url.password || undefined,
   tls: url.protocol === 'rediss:' ? {} : undefined,
+  // required by bullmq for managed/serverless redis (e.g. upstash)
+  maxRetriesPerRequest: null,
 }
 
 export const mediaQueue = new Queue(MEDIA_QUEUE, {

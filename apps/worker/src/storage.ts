@@ -9,6 +9,9 @@ const s3 = new S3Client({
     accessKeyId: env.S3_ACCESS_KEY_ID,
     secretAccessKey: env.S3_SECRET_ACCESS_KEY,
   },
+  // some S3-compatible stores (GCS, R2) reject the aws-sdk's default checksums
+  requestChecksumCalculation: 'WHEN_REQUIRED',
+  responseChecksumValidation: 'WHEN_REQUIRED',
 })
 
 export async function getObject(key: string): Promise<Buffer> {

@@ -11,7 +11,8 @@ COPY packages/shared/package.json packages/shared/
 COPY apps/api/package.json apps/api/
 COPY apps/worker/package.json apps/worker/
 COPY apps/web/package.json apps/web/
-RUN npm ci
+# --omit=optional drops onnxruntime/transformers (only used for local captioning)
+RUN npm ci --omit=optional
 
 COPY . .
 RUN npm -w @camarin/db run generate

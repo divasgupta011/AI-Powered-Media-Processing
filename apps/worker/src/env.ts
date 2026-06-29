@@ -25,6 +25,8 @@ const schema = z.object({
   WORKER_CONCURRENCY: z.coerce.number().default(5),
   // artificial per-job delay, for watching the queue back up while testing. 0 = off.
   PROCESSING_DELAY_MS: z.coerce.number().default(0),
+  // real Google Vision via a REST api key (APIs & Services > Credentials). empty = mock.
+  GOOGLE_VISION_API_KEY: z.string().default(''),
 })
 
 const parsed = schema.safeParse(process.env)

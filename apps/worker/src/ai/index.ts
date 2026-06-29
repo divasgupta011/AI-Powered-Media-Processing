@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import { env } from '../env'
 import { captionWithHuggingFace } from './huggingface'
 import { labelsWithVision, safetyWithVision } from './google'
@@ -7,8 +6,7 @@ import type { AiClient } from './types'
 import { captionWithVlm } from './vlm'
 
 function visionConfigured(): boolean {
-  const creds = process.env.GOOGLE_APPLICATION_CREDENTIALS
-  return !!creds && fs.existsSync(creds)
+  return env.GOOGLE_VISION_API_KEY.length > 0
 }
 
 export function createAiClient(): AiClient {
@@ -17,11 +15,11 @@ export function createAiClient(): AiClient {
   // caption: local model in-process, or a hosted vision LLM via HF providers
   const caption = env.CAPTION_PROVIDER === 'vlm' ? captionWithVlm : captionWithHuggingFace
 
-  // vision needs google credentials - fall back to mock for labels/safety if absent
+  // vision needs an api key - fall back to mock for labels/safety if absent
   const vision = visionConfigured()
   console.log(`ai: caption=${env.CAPTION_PROVIDER}, vision=${vision ? 'google' : 'mock'}`)
   if (!vision) {
-    console.warn('google credentials not set - using mock for labels + safety')
+    console.warn('GOOGLE_VISION_API_KEY not set - using mock for labels + safety')
   }
 
   return {

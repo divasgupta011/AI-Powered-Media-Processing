@@ -22,6 +22,8 @@ app.use('/notifications', notificationsRouter)
 
 app.use(errorHandler)
 
-app.listen(env.API_PORT, () => {
-  console.log(`api listening on :${env.API_PORT}`)
+// honour a platform-assigned port (Render/Railway/Heroku-style), else our default
+const port = Number(process.env.PORT) || env.API_PORT
+app.listen(port, () => {
+  console.log(`api listening on :${port}`)
 })
