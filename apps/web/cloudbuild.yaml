@@ -32,4 +32,6 @@ steps:
       - '${_SERVICE}'
       - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${SHORT_SHA}
       - --region=${_REGION}
+      - --port=80
+      - --allow-unauthenticated
       - --quiet
