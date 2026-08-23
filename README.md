@@ -85,16 +85,17 @@ Only `DATABASE_URL` and `JWT_SECRET` are strictly required — the rest have def
 that match compose. For real AI you need the Vision key and the HF token. Full list
 is in `.env.example`; the ones that matter:
 
-| var                     | what it's for       | where to get it                                                                                                                                            |
-| ----------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`          | postgres            | compose locally; [Neon](https://neon.tech) in prod (use the **direct**, non-pooler url)                                                                    |
-| `REDIS_URL`             | queue               | compose locally; [Upstash](https://upstash.com) in prod                                                                                                    |
-| `JWT_SECRET`            | signs access tokens | any long random string (`openssl rand -base64 32`)                                                                                                         |
-| `GOOGLE_VISION_API_KEY` | labels + safety     | GCP → enable the Cloud Vision API → APIs & Services → Credentials → **Create API key** (restrict it to the Vision API)                                     |
-| `HUGGINGFACE_API_TOKEN` | captioning          | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens), a read token                                                                     |
-| `S3_*`                  | object storage      | minio defaults are preset for local; in prod I used GCS via its S3 interoperability API (Cloud Storage → Settings → Interoperability → create an HMAC key) |
-| `AI_MOCK`               | stub the AI calls   | leave `true` to run without keys; `false` to hit the real services                                                                                         |
-| `CAPTION_PROVIDER`      | `vlm` or `local`    | `vlm` uses a hosted model (needs the HF token), `local` runs in-process                                                                                    |
+| var                     | what it's for             | where to get it                                                                                                                                            |
+| ----------------------- | ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | postgres                  | compose locally; [Neon](https://neon.tech) in prod (use the **direct**, non-pooler url)                                                                    |
+| `REDIS_URL`             | queue                     | compose locally; [Upstash](https://upstash.com) in prod                                                                                                    |
+| `JWT_SECRET`            | signs access tokens       | any long random string (`openssl rand -base64 32`)                                                                                                         |
+| `GOOGLE_VISION_API_KEY` | labels + safety           | GCP → enable the Cloud Vision API → APIs & Services → Credentials → **Create API key** (restrict it to the Vision API)                                     |
+| `HUGGINGFACE_API_TOKEN` | captioning                | [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens), a read token                                                                     |
+| `S3_*`                  | object storage            | minio defaults are preset for local; in prod I used GCS via its S3 interoperability API (Cloud Storage → Settings → Interoperability → create an HMAC key) |
+| `AI_MOCK`               | stub the AI calls         | leave `true` to run without keys; `false` to hit the real services                                                                                         |
+| `WORKER_URL`            | wake a zero-scaled worker | the worker's own url; only needed on Cloud Run, empty everywhere else                                                                                      |
+| `CAPTION_PROVIDER`      | `vlm` or `local`          | `vlm` uses a hosted model (needs the HF token), `local` runs in-process                                                                                    |
 
 ## The pipeline
 
@@ -156,13 +157,58 @@ Google Cloud Run, one service each for api, worker and web:
 
 - **api** scales to zero — nothing to pay when idle, cold-starts on the first request
   and runs the db migration on boot.
-- **worker** stays warm (min 1 instance, cpu always allocated) so it's always
-  draining the queue.
+- **worker** also scales to zero, and gets woken on demand — see below.
 - **web** is the built static app served by nginx.
 
 Postgres is Neon, redis is Upstash, images live in a GCS bucket. Each service has a
 `cloudbuild.yaml` and a Cloud Build trigger; pushing to `main` rebuilds and
 redeploys.
+
+### Waking the worker
+
+Cloud Run sizes a service by its inbound requests, but the worker has none — it
+pulls from redis. Left at min-instances=0 it gets scaled away and jobs sit `pending`
+forever; pinned at min-instances=1 it bills around the clock to be idle most of it.
+So the worker exposes `/wake`, and two things call it:
+
+- the **api**, right after it enqueues. That's what starts an instance, and it's the
+  whole of the latency story — a cold start and the job is moving.
+- a **Cloud Scheduler** job every 10 minutes, as a backstop for anything the nudge
+  misses: a nudge that failed, a job enqueued while the worker was mid-deploy, or a
+  BullMQ retry whose backoff expired after the instance went away.
+
+`/wake` doesn't return as soon as it's hit. It holds the request open until the queue
+is empty, because Cloud Run only guarantees an instance while a request is in flight
+— returning early would let it be scaled away mid-job. Concurrent callers share one
+drain loop, and it gives up after 4 minutes so it can't outlive the request timeout.
+The api sends the nudge without awaiting it, so uploads still return immediately.
+
+One-time setup, after the worker is deployed. `REGION`, `WORKER` and `API` match the
+`_REGION` / `_SERVICE` values in the two `cloudbuild.yaml` files:
+
+```bash
+REGION=asia-south2
+WORKER=camarin-worker
+API=ai-powered-media-processing
+PROJECT=$(gcloud config get-value project)
+
+WORKER_URL=$(gcloud run services describe $WORKER --region=$REGION --format='value(status.url)')
+
+# let the api call the private worker
+API_SA=$(gcloud run services describe $API --region=$REGION --format='value(spec.template.spec.serviceAccountName)')
+gcloud run services add-iam-policy-binding $WORKER --region=$REGION --member="serviceAccount:$API_SA" --role=roles/run.invoker
+gcloud run services update $API --region=$REGION --update-env-vars=WORKER_URL=$WORKER_URL
+
+# backstop ping, on its own invoker identity
+gcloud iam service-accounts create worker-pinger --display-name='worker wake ping'
+PINGER=worker-pinger@$PROJECT.iam.gserviceaccount.com
+gcloud run services add-iam-policy-binding $WORKER --region=$REGION --member="serviceAccount:$PINGER" --role=roles/run.invoker
+
+gcloud scheduler jobs create http worker-wake --location=$REGION --schedule='*/10 * * * *' --uri="$WORKER_URL/wake" --http-method=POST --oidc-service-account-email="$PINGER" --oidc-token-audience="$WORKER_URL" --attempt-deadline=300s
+```
+
+Locally and in compose `WORKER_URL` is unset, the worker runs continuously, and none
+of this is in the path.
 
 ## Tests
 

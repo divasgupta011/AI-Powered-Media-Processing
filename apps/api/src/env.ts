@@ -18,6 +18,12 @@ const schema = z.object({
     .string()
     .default('true')
     .transform((v) => v === 'true'),
+  // base url of the worker service. set it where the worker can be scaled to zero
+  // (cloud run) so uploads can wake it; leave empty when it's always running.
+  WORKER_URL: z
+    .string()
+    .default('')
+    .transform((v) => v.replace(/\/+$/, '')),
 })
 
 const parsed = schema.safeParse(process.env)

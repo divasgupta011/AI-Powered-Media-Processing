@@ -1,5 +1,10 @@
 # CD for the worker. same monorepo-root build context as the api.
 # set _SERVICE to whatever you name the worker cloud run service.
+#
+# min-instances=0 is safe because the api pokes /wake after every enqueue and a
+# cloud scheduler job pings it as a backstop - see wake.ts. no-cpu-throttling keeps
+# bullmq's poll alive between requests so a job that arrives without a nudge still
+# gets picked up. timeout must stay above MAX_HOLD_MS in wake.ts.
 substitutions:
   _REGION: asia-south2
   _REPO: cloud-run-source-deploy
@@ -34,4 +39,5 @@ steps:
       - --no-cpu-throttling
       - --no-allow-unauthenticated
       - --port=8080
+      - --timeout=300
       - --quiet
