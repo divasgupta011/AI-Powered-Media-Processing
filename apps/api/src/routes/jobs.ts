@@ -5,7 +5,6 @@ import { prisma } from '@camarin/db'
 import { ALLOWED_MIME_TYPES, MAX_FILE_SIZE_BYTES } from '@camarin/shared'
 import { ApiError, asyncHandler } from '../errors'
 import { sniffImageType } from '../lib/imageType'
-import { wakeWorker } from '../lib/wakeWorker'
 import { requireAuth } from '../middleware/auth'
 import { mediaQueue } from '../queue'
 import { getObject, putObject } from '../storage'
@@ -46,7 +45,6 @@ jobsRouter.post(
     })
 
     await mediaQueue.add('process', { jobId }, { jobId })
-    wakeWorker()
 
     res.status(202).json({ jobId: job.id, status: job.status })
   }),
@@ -112,7 +110,6 @@ jobsRouter.post(
       data: { status: 'pending', lastError: null },
     })
     await mediaQueue.add('process', { jobId: job.id }, { jobId: `${job.id}:${Date.now()}` })
-    wakeWorker()
 
     res.status(202).json({ jobId: job.id, status: 'pending' })
   }),

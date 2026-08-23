@@ -21,7 +21,7 @@ const schema = z.object({
   HF_CAPTION_MODEL: z.string().default('Xenova/vit-gpt2-image-captioning'),
   // local = run the model in-process; vlm = hosted vision LLM via HF providers
   CAPTION_PROVIDER: z.enum(['local', 'vlm']).default('local'),
-  HF_VLM_MODEL: z.string().default('Qwen/Qwen3-VL-30B-A3B-Instruct'),
+  HF_VLM_MODEL: z.string().default('Qwen/Qwen3-VL-8B-Instruct'),
   WORKER_CONCURRENCY: z.coerce.number().default(5),
   // artificial per-job delay, for watching the queue back up while testing. 0 = off.
   PROCESSING_DELAY_MS: z.coerce.number().default(0),
