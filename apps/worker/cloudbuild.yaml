@@ -29,7 +29,7 @@ steps:
       - '${_SERVICE}'
       - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${SHORT_SHA}
       - --region=${_REGION}
-      - --min-instances=0
+      - --min-instances=1
       - --max-instances=1
       - --no-cpu-throttling
       - --no-allow-unauthenticated
