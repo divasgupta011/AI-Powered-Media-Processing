@@ -9,6 +9,12 @@ import { connection } from './queue'
 const worker = new Worker(MEDIA_QUEUE, createProcessor(), {
   connection,
   concurrency: env.WORKER_CONCURRENCY,
+  // an idle worker still talks to redis - it long-polls for work and sweeps for
+  // stalled jobs. at the defaults that's ~600k commands a month, over upstash's free
+  // tier on its own. the long poll wakes the instant a job is pushed, so stretching
+  // it costs no latency; only stalled-job detection gets slower.
+  drainDelay: 60,
+  stalledInterval: 300_000,
 })
 
 worker.on('completed', (job) => {
